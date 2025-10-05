@@ -1,0 +1,12 @@
+{
+    "display_name": "Expire chats",
+    "loading_order": 20,
+    "requires": [],
+    "optional": [],
+    "js": "expire-chats.js",
+    "css": "expire-chats.css",
+    "author": "Christoph Dittmann",
+    "version": "0.0.1",
+    "homePage": "https://github.com/Christoph-D/expire-chats",
+    "auto_update": true
+}

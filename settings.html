@@ -1,0 +1,66 @@
+<div class="expire_chat_settings">
+    <div class="inline-drawer">
+        <div class="inline-drawer-toggle inline-drawer-header">
+            <b>Expire chats</b>
+            <div class="inline-drawer-icon fa-solid interactable up fa-circle-chevron-up" tabindex="0"></div>
+        </div>
+        <div class="inline-drawer-content">
+            <div class="marginBot5">
+                <label for="expire_chats_days">
+                    <strong>Expire chats/backups older than (days):</strong>
+                </label>
+                <input
+                    id="expire_chats_days"
+                    class="text_pole"
+                    type="number"
+                    min="1"
+                    step="1"
+                    value="90"
+                    style="width: 100px; margin-left: 10px;"
+                />
+            </div>
+
+            <div class="marginBot10">
+                <small class="notes">
+                    This extension will delete chats whose last message is older than the specified number of days.
+                    The currently open chat will not be deleted.
+                </small>
+            </div>
+
+            <div class="marginBot10">
+                <label for="expire_chats_backups" class="checkbox_label">
+                    <input id="expire_chats_backups" type="checkbox" />
+                    <span>Also expire chat backups older than specified days</span>
+                </label>
+                <small class="notes">
+                    If enabled, chat backups older than the specified number of days will also be deleted.
+                    If disabled, only chats will be deleted, not backups.
+                </small>
+            </div>
+
+            <div class="marginBot10">
+                <label for="expire_chats_auto" class="checkbox_label">
+                    <input id="expire_chats_auto" type="checkbox" />
+                    <span>Automatically expire chats on page load</span>
+                </label>
+                <small class="notes">
+                    If enabled, chats will be automatically deleted on page load without confirmation.
+                    Only a notification will be shown with the results.
+                </small>
+            </div>
+
+            <div class="marginBot5">
+                <button id="expire_chats_button" class="menu_button">
+                    <span><i class="fa-solid fa-clock"></i>Expire old chats/backups now<br>
+                    (includes a preview and a chance to cancel)</span>
+                </button>
+            </div>
+
+            <div class="marginTop10">
+                <small class="notes" style="color: #ff6b6b;">
+                    ⚠️ <strong>Warning:</strong> Deletion is permanent and cannot be undone.
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
