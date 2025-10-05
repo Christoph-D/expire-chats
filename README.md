@@ -1,4 +1,4 @@
-# Expire chats
+# Expire Chats
 
 A SillyTavern extension for automatic chat data retention management.
 

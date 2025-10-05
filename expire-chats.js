@@ -66,7 +66,7 @@ async function getAllChats() {
                 });
             }
         } catch (error) {
-            console.error(`[Expire chats] Failed to fetch chats for character ${character.name}:`, error);
+            console.error(`[Expire Chats] Failed to fetch chats for character ${character.name}:`, error);
         }
     }
 
@@ -99,7 +99,7 @@ async function getAllChats() {
                 });
             }
         } catch (error) {
-            console.error(`[Expire chats] Failed to fetch group chats for ${group.name}:`, error);
+            console.error(`[Expire Chats] Failed to fetch group chats for ${group.name}:`, error);
         }
     }
 
@@ -140,7 +140,7 @@ function filterExpiredChats(allChats, expirationDays, currentCharacterId, curren
                     expiredChats.push(chatInfo);
                 }
             } catch (error) {
-                console.error('[Expire chats] Failed to parse timestamp:', error);
+                console.error('[Expire Chats] Failed to parse timestamp:', error);
             }
         }
     }
@@ -173,7 +173,7 @@ async function deleteChat(chatInfo) {
             return response.ok;
         }
     } catch (error) {
-        console.error(`[Expire chats] Failed to delete chat ${chatData.file_name}:`, error);
+        console.error(`[Expire Chats] Failed to delete chat ${chatData.file_name}:`, error);
         return false;
     }
 }
@@ -195,7 +195,7 @@ async function getAllBackups() {
             token: data.token,
         };
     } catch (error) {
-        console.error('[Expire chats] Failed to fetch backups:', error);
+        console.error('[Expire Chats] Failed to fetch backups:', error);
         return { backups: [], token: null };
     }
 }
@@ -219,10 +219,10 @@ function filterExpiredBackups(backups, expirationDays) {
                 if (parsedDate.isValid()) {
                     backupDate = parsedDate;
                 } else {
-                    console.warn(`[Expire chats] Failed to parse backup timestamp: ${backup.name}, falling back to mtime`);
+                    console.warn(`[Expire Chats] Failed to parse backup timestamp: ${backup.name}, falling back to mtime`);
                 }
             } catch (error) {
-                console.error('[Expire chats] Failed to parse backup timestamp:', error);
+                console.error('[Expire Chats] Failed to parse backup timestamp:', error);
             }
         }
 
@@ -263,7 +263,7 @@ async function deleteBackups(backupHashes, token) {
 
         return { success: true, count: backupHashes.length };
     } catch (error) {
-        console.error('[Expire chats] Failed to delete backups:', error);
+        console.error('[Expire Chats] Failed to delete backups:', error);
         return { success: false, count: 0 };
     }
 }
@@ -278,7 +278,7 @@ async function finalizeDataMaid(token) {
             body: JSON.stringify({ token }),
         });
     } catch (error) {
-        console.error('[Expire chats] Failed to finalize data maid:', error);
+        console.error('[Expire Chats] Failed to finalize data maid:', error);
     }
 }
 
@@ -351,8 +351,8 @@ async function autoExpireChats() {
             message += ` (${totalFailed} failed)`;
         }
 
-        toastr.success(message, 'Expire chats');
-        console.log(`[Expire chats] ${message}`);
+        toastr.success(message, 'Expire Chats');
+        console.log(`[Expire Chats] ${message}`);
 
         // Refresh welcome screen if it's currently open
         if (deleteResult.chatSuccessCount > 0 && getCurrentChatId() === undefined) {
@@ -360,8 +360,8 @@ async function autoExpireChats() {
         }
 
     } catch (error) {
-        console.error('[Expire chats] Failed to auto-expire chats:', error);
-        toastr.error('Failed to auto-expire chats. Check console for details.', 'Expire chats');
+        console.error('[Expire Chats] Failed to auto-expire chats:', error);
+        toastr.error('Failed to auto-expire chats. Check console for details.', 'Expire Chats');
     }
 }
 
@@ -517,7 +517,7 @@ async function previewExpiredChats() {
             }
         }
     } catch (error) {
-        console.error('[Expire chats] Failed to preview expired chats:', error);
+        console.error('[Expire Chats] Failed to preview expired chats:', error);
         await callGenericPopup(
             'An error occurred while scanning chats. Please check the console for details.',
             POPUP_TYPE.TEXT
@@ -532,7 +532,7 @@ async function expireChats(expiredChats, expiredBackups = [], backupToken = null
 
     // Delete chats
     if (expiredChats.length > 0) {
-        const progressMessage = `[Expire chats] Deleting ${expiredChats.length} chat${expiredChats.length !== 1 ? 's' : ''}...`;
+        const progressMessage = `[Expire Chats] Deleting ${expiredChats.length} chat${expiredChats.length !== 1 ? 's' : ''}...`;
         console.log(progressMessage);
 
         for (const chatInfo of expiredChats) {
@@ -541,7 +541,7 @@ async function expireChats(expiredChats, expiredBackups = [], backupToken = null
             const lastMes = chatInfo.chatData.last_mes
                 ? timestampToMoment(chatInfo.chatData.last_mes).format('MMM D, YYYY')
                 : 'Unknown';
-            console.log(`[Expire chats] Deleting chat: ${name} - ${chatName} (Last message: ${lastMes})`);
+            console.log(`[Expire Chats] Deleting chat: ${name} - ${chatName} (Last message: ${lastMes})`);
 
             const success = await deleteChat(chatInfo);
             if (success) {
@@ -557,10 +557,10 @@ async function expireChats(expiredChats, expiredBackups = [], backupToken = null
     let backupSuccessCount = 0;
     let backupFailCount = 0;
     if (expiredBackups.length > 0 && backupToken) {
-        console.log(`[Expire chats] Deleting ${expiredBackups.length} backup${expiredBackups.length !== 1 ? 's' : ''}...`);
+        console.log(`[Expire Chats] Deleting ${expiredBackups.length} backup${expiredBackups.length !== 1 ? 's' : ''}...`);
 
         for (const backup of expiredBackups) {
-            console.log(`[Expire chats] Deleting backup: ${backup.name}`);
+            console.log(`[Expire Chats] Deleting backup: ${backup.name}`);
         }
 
         const backupHashes = expiredBackups.map(b => b.hash);
@@ -577,7 +577,7 @@ async function expireChats(expiredChats, expiredBackups = [], backupToken = null
         await finalizeDataMaid(backupToken);
     }
 
-    console.log(`[Expire chats] Expired ${chatSuccessCount} chats and ${backupSuccessCount} backups. ${chatFailCount + backupFailCount} failed.`);
+    console.log(`[Expire Chats] Expired ${chatSuccessCount} chats and ${backupSuccessCount} backups. ${chatFailCount + backupFailCount} failed.`);
 
     return {
         chatSuccessCount,
