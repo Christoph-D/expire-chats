@@ -2,6 +2,17 @@
     text-align: left;
 }
 
+.expire_chats_preview {
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
 #expire_chats_button {
     width: 100%;
+}
+
+#expire_chats_button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
 }

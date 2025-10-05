@@ -435,25 +435,28 @@ async function previewExpiredChats() {
             previewMessage += `<li>${groupChatCount} group chat${groupChatCount !== 1 ? 's' : ''}</li>`;
             previewMessage += `</ul>`;
 
-            // Show sample of chats (max 10)
-            previewMessage += `<p><strong>Sample chats to be deleted:</strong></p>`;
-            previewMessage += `<ul>`;
-
-            for (let i = 0; i < Math.min(10, expiredChats.length); i++) {
-                const chat = expiredChats[i];
-                const name = chat.isGroup
-                    ? chat.group.name
-                    : chat.character.name;
-                const chatName = chat.chatData.file_name.replace('.jsonl', '');
-                const lastMes = chat.chatData.last_mes
-                    ? timestampToMoment(chat.chatData.last_mes).format('MMM D, YYYY')
-                    : 'Unknown';
-
-                previewMessage += `<li><strong>${name}</strong>: ${chatName} (Last message: ${lastMes})</li>`;
+            // Group chats by name and show counts
+            const chatsByName = {};
+            for (const chat of expiredChats) {
+                const name = chat.isGroup ? chat.group.name : chat.character.name;
+                if (!chatsByName[name]) {
+                    chatsByName[name] = 0;
+                }
+                chatsByName[name]++;
             }
 
-            if (expiredChats.length > 10) {
-                previewMessage += `<li><em>... and ${expiredChats.length - 10} more</em></li>`;
+            // Sort by count descending, then alphabetically
+            const sortedNames = Object.entries(chatsByName)
+                .sort((a, b) => {
+                    if (b[1] !== a[1]) return b[1] - a[1];
+                    return a[0].localeCompare(b[0]);
+                });
+
+            previewMessage += `<p><strong>Chats:</strong></p>`;
+            previewMessage += `<ul>`;
+
+            for (const [name, count] of sortedNames) {
+                previewMessage += `<li><strong>${name}</strong>: ${count} chat${count !== 1 ? 's' : ''}</li>`;
             }
 
             previewMessage += `</ul>`;
@@ -478,17 +481,14 @@ async function previewExpiredChats() {
             previewMessage += `<p><strong>Found ${expiredBackups.length} backup${expiredBackups.length !== 1 ? 's' : ''} older than ${expirationDays} days:</strong></p>`;
             previewMessage += `<ul>`;
 
-            // Show top chat names with backup counts
             const sortedChats = Object.entries(backupsByChat)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 10);
+                .sort((a, b) => {
+                    if (b[1] !== a[1]) return b[1] - a[1];
+                    return a[0].localeCompare(b[0]);
+                });
 
             for (const [chatName, count] of sortedChats) {
                 previewMessage += `<li><strong>${chatName}</strong>: ${count} backup${count !== 1 ? 's' : ''}</li>`;
-            }
-
-            if (Object.keys(backupsByChat).length > 10) {
-                previewMessage += `<li><em>... and ${Object.keys(backupsByChat).length - 10} more chat${Object.keys(backupsByChat).length - 10 !== 1 ? 's' : ''}</em></li>`;
             }
 
             previewMessage += `</ul>`;
@@ -633,7 +633,13 @@ function onAutoExpireChange() {
 }
 
 async function onPreviewClick() {
-    await previewExpiredChats();
+    const $button = $('#expire_chats_button');
+    $button.prop('disabled', true);
+    try {
+        await previewExpiredChats();
+    } finally {
+        $button.prop('disabled', false);
+    }
 }
 
 async function loadSettings() {
