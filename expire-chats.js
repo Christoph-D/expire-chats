@@ -214,9 +214,9 @@ function filterExpiredBackups(backups, expirationDays) {
         if (match) {
             const timestampStr = match[1];
             try {
-                const parsedDate = moment(timestampStr, 'YYYYMMDD--HHmmss');
+                const parsedDate = moment(timestampStr, 'YYYYMMDD-HHmmss');
 
-                if (parsedDate.isValid()) {
+                if (parsedDate.isValid() && now.diff(parsedDate, 'years') <= 100) {
                     backupDate = parsedDate;
                 } else {
                     console.warn(`[Expire Chats] Failed to parse backup timestamp: ${backup.name}, falling back to mtime`);
