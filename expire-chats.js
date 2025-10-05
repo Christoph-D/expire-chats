@@ -1,7 +1,8 @@
-import { getRequestHeaders, saveSettingsDebounced } from '../../../../script.js';
+import { getCurrentChatId, getRequestHeaders, saveSettingsDebounced } from '../../../../script.js';
 import { renderExtensionTemplateAsync } from '../../../extensions.js';
 import { timestampToMoment } from '../../../utils.js';
 import { callGenericPopup, POPUP_TYPE } from '../../../popup.js';
+import { openWelcomeScreen } from '../../../welcome-screen.js';
 export { MODULE_NAME };
 
 const MODULE_NAME = 'expireChats';
@@ -353,6 +354,11 @@ async function autoExpireChats() {
         toastr.success(message, 'Expire chats');
         console.log(`[Expire chats] ${message}`);
 
+        // Refresh welcome screen if it's currently open
+        if (deleteResult.chatSuccessCount > 0 && getCurrentChatId() === undefined) {
+            await openWelcomeScreen({ force: true });
+        }
+
     } catch (error) {
         console.error('[Expire chats] Failed to auto-expire chats:', error);
         toastr.error('Failed to auto-expire chats. Check console for details.', 'Expire chats');
@@ -497,6 +503,11 @@ async function previewExpiredChats() {
             }
 
             resultMessage += `</div>`;
+
+            // Refresh welcome screen if it's currently open
+            if (deleteResult.chatSuccessCount > 0 && getCurrentChatId() === undefined) {
+                await openWelcomeScreen({ force: true });
+            }
 
             await callGenericPopup(resultMessage, POPUP_TYPE.TEXT);
         } else {
