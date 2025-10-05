@@ -37,7 +37,8 @@ bug-free. Keep external backups of all important data.
 ### Manual Expiration
 
 Click the **"Expire now"** button in the extension settings to immediately
-expire old chats/backups.
+expire old chats/backups. A preview dialog will show which chats/backups will be
+deleted, giving you a chance to cancel before any data is removed.
 
 ### Automatic Expiration
 
