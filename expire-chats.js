@@ -331,63 +331,19 @@ async function autoExpireChats() {
         }
 
         // Delete chats and backups silently
-        let chatSuccessCount = 0;
-        let chatFailCount = 0;
-
-        if (expiredChats.length > 0) {
-            console.log(`[Expire chats] Auto-deleting ${expiredChats.length} chat${expiredChats.length !== 1 ? 's' : ''}...`);
-
-            for (const chatInfo of expiredChats) {
-                const name = chatInfo.isGroup ? chatInfo.group.name : chatInfo.character.name;
-                const chatName = chatInfo.chatData.file_name.replace('.jsonl', '');
-                const lastMes = chatInfo.chatData.last_mes
-                    ? timestampToMoment(chatInfo.chatData.last_mes).format('MMM D, YYYY')
-                    : 'Unknown';
-                console.log(`[Expire chats] Deleting chat: ${name} - ${chatName} (Last message: ${lastMes})`);
-
-                const success = await deleteChat(chatInfo);
-                if (success) {
-                    chatSuccessCount++;
-                } else {
-                    chatFailCount++;
-                }
-            }
-        }
-
-        let backupSuccessCount = 0;
-        let backupFailCount = 0;
-        if (expiredBackups.length > 0 && backupToken) {
-            console.log(`[Expire chats] Auto-deleting ${expiredBackups.length} backup${expiredBackups.length !== 1 ? 's' : ''}...`);
-
-            for (const backup of expiredBackups) {
-                console.log(`[Expire chats] Deleting backup: ${backup.name}`);
-            }
-
-            const backupHashes = expiredBackups.map(b => b.hash);
-            const deleteResult = await deleteBackups(backupHashes, backupToken);
-
-            if (deleteResult.success) {
-                backupSuccessCount = deleteResult.count;
-            } else {
-                backupFailCount = expiredBackups.length;
-            }
-        }
-
-        if (backupToken) {
-            await finalizeDataMaid(backupToken);
-        }
+        const deleteResult = await expireChats(expiredChats, expiredBackups, backupToken);
 
         // Show toast notification
-        const totalSuccess = chatSuccessCount + backupSuccessCount;
-        const totalFailed = chatFailCount + backupFailCount;
+        const totalSuccess = deleteResult.chatSuccessCount + deleteResult.backupSuccessCount;
+        const totalFailed = deleteResult.chatFailCount + deleteResult.backupFailCount;
 
         let message = `Expired ${totalSuccess} item${totalSuccess !== 1 ? 's' : ''}`;
-        if (chatSuccessCount > 0 && backupSuccessCount > 0) {
-            message = `Expired ${chatSuccessCount} chat${chatSuccessCount !== 1 ? 's' : ''} and ${backupSuccessCount} backup${backupSuccessCount !== 1 ? 's' : ''}`;
-        } else if (chatSuccessCount > 0) {
-            message = `Expired ${chatSuccessCount} chat${chatSuccessCount !== 1 ? 's' : ''}`;
-        } else if (backupSuccessCount > 0) {
-            message = `Expired ${backupSuccessCount} backup${backupSuccessCount !== 1 ? 's' : ''}`;
+        if (deleteResult.chatSuccessCount > 0 && deleteResult.backupSuccessCount > 0) {
+            message = `Expired ${deleteResult.chatSuccessCount} chat${deleteResult.chatSuccessCount !== 1 ? 's' : ''} and ${deleteResult.backupSuccessCount} backup${deleteResult.backupSuccessCount !== 1 ? 's' : ''}`;
+        } else if (deleteResult.chatSuccessCount > 0) {
+            message = `Expired ${deleteResult.chatSuccessCount} chat${deleteResult.chatSuccessCount !== 1 ? 's' : ''}`;
+        } else if (deleteResult.backupSuccessCount > 0) {
+            message = `Expired ${deleteResult.backupSuccessCount} backup${deleteResult.backupSuccessCount !== 1 ? 's' : ''}`;
         }
 
         if (totalFailed > 0) {
@@ -505,7 +461,44 @@ async function previewExpiredChats() {
         );
 
         if (result) {
-            await expireChats(expiredChats, expiredBackups, backupToken);
+            const deleteResult = await expireChats(expiredChats, expiredBackups, backupToken);
+
+            // Show results
+            let resultMessage = `<div class="expire_chats expire_chats_result">`;
+            resultMessage += `<p><strong>Expiration complete</strong></p>`;
+
+            if (expiredChats.length > 0) {
+                resultMessage += `<p><strong>Chats:</strong></p>`;
+                resultMessage += `<ul>`;
+                resultMessage += `<li>✓ Successfully deleted: ${deleteResult.chatSuccessCount}</li>`;
+                if (deleteResult.chatFailCount > 0) {
+                    resultMessage += `<li>✗ Failed to delete: ${deleteResult.chatFailCount}</li>`;
+                }
+                resultMessage += `</ul>`;
+            }
+
+            if (expiredBackups.length > 0) {
+                resultMessage += `<p><strong>Backups:</strong></p>`;
+                resultMessage += `<ul>`;
+                resultMessage += `<li>✓ Successfully deleted: ${deleteResult.backupSuccessCount}</li>`;
+                if (deleteResult.backupFailCount > 0) {
+                    resultMessage += `<li>✗ Failed to delete: ${deleteResult.backupFailCount}</li>`;
+                }
+                resultMessage += `</ul>`;
+            }
+
+            if (deleteResult.failedChats.length > 0) {
+                resultMessage += `<p><strong>Failed chats:</strong></p>`;
+                resultMessage += `<ul style="max-height: 150px; overflow-y: auto;">`;
+                for (const failed of deleteResult.failedChats) {
+                    resultMessage += `<li>${failed}</li>`;
+                }
+                resultMessage += `</ul>`;
+            }
+
+            resultMessage += `</div>`;
+
+            await callGenericPopup(resultMessage, POPUP_TYPE.TEXT);
         } else {
             // User cancelled, finalize the token
             if (backupToken) {
@@ -573,44 +566,15 @@ async function expireChats(expiredChats, expiredBackups = [], backupToken = null
         await finalizeDataMaid(backupToken);
     }
 
-    // Show results
-    let resultMessage = `<div class="expire_chats expire_chats_result">`;
-    resultMessage += `<p><strong>Expiration complete</strong></p>`;
-
-    if (expiredChats.length > 0) {
-        resultMessage += `<p><strong>Chats:</strong></p>`;
-        resultMessage += `<ul>`;
-        resultMessage += `<li>✓ Successfully deleted: ${chatSuccessCount}</li>`;
-        if (chatFailCount > 0) {
-            resultMessage += `<li>✗ Failed to delete: ${chatFailCount}</li>`;
-        }
-        resultMessage += `</ul>`;
-    }
-
-    if (expiredBackups.length > 0) {
-        resultMessage += `<p><strong>Backups:</strong></p>`;
-        resultMessage += `<ul>`;
-        resultMessage += `<li>✓ Successfully deleted: ${backupSuccessCount}</li>`;
-        if (backupFailCount > 0) {
-            resultMessage += `<li>✗ Failed to delete: ${backupFailCount}</li>`;
-        }
-        resultMessage += `</ul>`;
-    }
-
-    if (failedChats.length > 0) {
-        resultMessage += `<p><strong>Failed chats:</strong></p>`;
-        resultMessage += `<ul style="max-height: 150px; overflow-y: auto;">`;
-        for (const failed of failedChats) {
-            resultMessage += `<li>${failed}</li>`;
-        }
-        resultMessage += `</ul>`;
-    }
-
-    resultMessage += `</div>`;
-
-    await callGenericPopup(resultMessage, POPUP_TYPE.TEXT);
-
     console.log(`[Expire chats] Expired ${chatSuccessCount} chats and ${backupSuccessCount} backups. ${chatFailCount + backupFailCount} failed.`);
+
+    return {
+        chatSuccessCount,
+        chatFailCount,
+        backupSuccessCount,
+        backupFailCount,
+        failedChats,
+    };
 }
 
 function onExpirationDaysInput() {
