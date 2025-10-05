@@ -31,8 +31,8 @@ bug-free. Keep external backups of all important data.
 1. Navigate to Extensions > Open "Expire chats"
 2. Set the expiration time in days
 3. Configure optional settings:
-   - **Delete backups**: Also remove expired chat backups
-   - **Auto-expire**: Automatically expire chats on page load
+   - **Expire backups**: Also delete expired chat backups
+   - **Auto-expire**: Automatically run on page load
 
 ### Manual Expiration
 
