@@ -1,6 +1,7 @@
 import { getCurrentChatId, getRequestHeaders, saveSettingsDebounced } from '../../../../script.js';
 import { renderExtensionTemplateAsync } from '../../../extensions.js';
 import { timestampToMoment } from '../../../utils.js';
+import { moment } from '../../../../lib.js';
 import { callGenericPopup, POPUP_TYPE } from '../../../popup.js';
 import { openWelcomeScreen } from '../../../welcome-screen.js';
 export { MODULE_NAME };
@@ -149,7 +150,7 @@ function filterExpiredChats(allChats, expirationDays, currentCharacterId, curren
 }
 
 async function deleteChat(chatInfo) {
-    const { character, group, chatData, isGroup } = chatInfo;
+    const { character, chatData, isGroup } = chatInfo;
 
     try {
         if (isGroup) {
@@ -299,7 +300,7 @@ async function getExpiredItems() {
         expirationDays,
         currentCharacterId,
         currentChat,
-        currentGroupId
+        currentGroupId,
     );
 
     // Get expired backups if enabled
@@ -388,14 +389,14 @@ async function previewExpiredChats() {
         const characterChatCount = expiredChats.filter(c => !c.isGroup).length;
         const groupChatCount = expiredChats.filter(c => c.isGroup).length;
 
-        let previewMessage = `<div class="expire_chats expire_chats_preview">`;
+        let previewMessage = '<div class="expire_chats expire_chats_preview">';
 
         if (expiredChats.length > 0) {
             previewMessage += `<p><strong>Found ${expiredChats.length} chat${expiredChats.length !== 1 ? 's' : ''} older than ${expirationDays} days:</strong></p>`;
-            previewMessage += `<ul>`;
+            previewMessage += '<ul>';
             previewMessage += `<li>${characterChatCount} character chat${characterChatCount !== 1 ? 's' : ''}</li>`;
             previewMessage += `<li>${groupChatCount} group chat${groupChatCount !== 1 ? 's' : ''}</li>`;
-            previewMessage += `</ul>`;
+            previewMessage += '</ul>';
 
             // Group chats by name and show counts
             const chatsByName = {};
@@ -414,14 +415,14 @@ async function previewExpiredChats() {
                     return a[0].localeCompare(b[0]);
                 });
 
-            previewMessage += `<p><strong>Chats:</strong></p>`;
-            previewMessage += `<ul>`;
+            previewMessage += '<p><strong>Chats:</strong></p>';
+            previewMessage += '<ul>';
 
             for (const [name, count] of sortedNames) {
                 previewMessage += `<li><strong>${name}</strong>: ${count} chat${count !== 1 ? 's' : ''}</li>`;
             }
 
-            previewMessage += `</ul>`;
+            previewMessage += '</ul>';
         }
 
         // Show backup information if enabled
@@ -441,7 +442,7 @@ async function previewExpiredChats() {
             }
 
             previewMessage += `<p><strong>Found ${expiredBackups.length} backup${expiredBackups.length !== 1 ? 's' : ''} older than ${expirationDays} days:</strong></p>`;
-            previewMessage += `<ul>`;
+            previewMessage += '<ul>';
 
             const sortedChats = Object.entries(backupsByChat)
                 .sort((a, b) => {
@@ -453,56 +454,56 @@ async function previewExpiredChats() {
                 previewMessage += `<li><strong>${chatName}</strong>: ${count} backup${count !== 1 ? 's' : ''}</li>`;
             }
 
-            previewMessage += `</ul>`;
+            previewMessage += '</ul>';
         }
 
-        previewMessage += `<p style="color: #ff6b6b; margin-top: 10px;"><strong>⚠️ This action cannot be undone!</strong></p>`;
-        previewMessage += `</div>`;
+        previewMessage += '<p style="color: #ff6b6b; margin-top: 10px;"><strong>⚠️ This action cannot be undone!</strong></p>';
+        previewMessage += '</div>';
 
         const result = await callGenericPopup(
             previewMessage,
             POPUP_TYPE.CONFIRM,
             '',
-            { okButton: 'Delete', cancelButton: 'Cancel' }
+            { okButton: 'Delete', cancelButton: 'Cancel' },
         );
 
         if (result) {
             const deleteResult = await expireChats(expiredChats, expiredBackups, backupToken);
 
             // Show results
-            let resultMessage = `<div class="expire_chats expire_chats_result">`;
-            resultMessage += `<p><strong>Expiration complete</strong></p>`;
+            let resultMessage = '<div class="expire_chats expire_chats_result">';
+            resultMessage += '<p><strong>Expiration complete</strong></p>';
 
             if (expiredChats.length > 0) {
-                resultMessage += `<p><strong>Chats:</strong></p>`;
-                resultMessage += `<ul>`;
+                resultMessage += '<p><strong>Chats:</strong></p>';
+                resultMessage += '<ul>';
                 resultMessage += `<li>✓ Successfully deleted: ${deleteResult.chatSuccessCount}</li>`;
                 if (deleteResult.chatFailCount > 0) {
                     resultMessage += `<li>✗ Failed to delete: ${deleteResult.chatFailCount}</li>`;
                 }
-                resultMessage += `</ul>`;
+                resultMessage += '</ul>';
             }
 
             if (expiredBackups.length > 0) {
-                resultMessage += `<p><strong>Backups:</strong></p>`;
-                resultMessage += `<ul>`;
+                resultMessage += '<p><strong>Backups:</strong></p>';
+                resultMessage += '<ul>';
                 resultMessage += `<li>✓ Successfully deleted: ${deleteResult.backupSuccessCount}</li>`;
                 if (deleteResult.backupFailCount > 0) {
                     resultMessage += `<li>✗ Failed to delete: ${deleteResult.backupFailCount}</li>`;
                 }
-                resultMessage += `</ul>`;
+                resultMessage += '</ul>';
             }
 
             if (deleteResult.failedChats.length > 0) {
-                resultMessage += `<p><strong>Failed chats:</strong></p>`;
-                resultMessage += `<ul style="max-height: 150px; overflow-y: auto;">`;
+                resultMessage += '<p><strong>Failed chats:</strong></p>';
+                resultMessage += '<ul style="max-height: 150px; overflow-y: auto;">';
                 for (const failed of deleteResult.failedChats) {
                     resultMessage += `<li>${failed}</li>`;
                 }
-                resultMessage += `</ul>`;
+                resultMessage += '</ul>';
             }
 
-            resultMessage += `</div>`;
+            resultMessage += '</div>';
 
             // Refresh welcome screen if it's currently open
             if (deleteResult.chatSuccessCount > 0 && getCurrentChatId() === undefined) {
@@ -520,7 +521,7 @@ async function previewExpiredChats() {
         console.error('[Expire Chats] Failed to preview expired chats:', error);
         await callGenericPopup(
             'An error occurred while scanning chats. Please check the console for details.',
-            POPUP_TYPE.TEXT
+            POPUP_TYPE.TEXT,
         );
     }
 }
